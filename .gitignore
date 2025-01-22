@@ -1,21 +1,17 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-.vscode
 
-# Directories
-data/
-models/
-results/
-mlruns/
+# Virtual environment
+venv/
+.env/
 
-# File Extensions
-*.csv
-*.pickle
-*.pyc
+# Temporary files
+*.log
+*.tmp
 
-# Environment Variables
-.env
+# Model files (optional if size is large)
+models/*.pth
 
-# Installer logs
-pip-log.txt
+# Ignore results (if auto-generated, but adjust if needed)
+results/*.csv

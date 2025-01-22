@@ -1,21 +1,16 @@
-"""
-This script prepares the data, trains a simple PyTorch model, and saves it.
-"""
-
 import os
-import sys
-import pickle
 import json
 import logging
 import pandas as pd
-from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
+import mlflow
+import mlflow.pytorch
 
-# Load configuration
+# Configuration paths
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONF_FILE = os.path.join(ROOT_DIR, "../settings.json")
 
@@ -29,8 +24,9 @@ TRAIN_PATH = os.path.join(DATA_DIR, conf["train"]["table_name"])
 # Logging setup
 logging.basicConfig(level=logging.INFO)
 
-# Define the model
+
 class SimpleNN(nn.Module):
+    """Defines a simple neural network."""
     def __init__(self, input_size, hidden_size, num_classes):
         super(SimpleNN, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
@@ -43,16 +39,15 @@ class SimpleNN(nn.Module):
         return x
 
 
-# Main training function
 def train_model():
+    """Loads data, trains the model, logs to MLFlow, and saves the trained model."""
     logging.info("Loading data...")
     df = pd.read_csv(TRAIN_PATH)
 
     # Preprocessing
     logging.info("Preprocessing data...")
-    feature_columns = ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)', 'petal width (cm)']
+    feature_columns = ["sepal length (cm)", "sepal width (cm)", "petal length (cm)", "petal width (cm)"]
     label_column = "target"
-
 
     # Encode labels
     le = LabelEncoder()
@@ -72,10 +67,7 @@ def train_model():
 
     # Convert to tensors
     train_data = TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.long))
-    test_data = TensorDataset(torch.tensor(X_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.long))
-
     train_loader = DataLoader(dataset=train_data, batch_size=32, shuffle=True)
-    test_loader = DataLoader(dataset=test_data, batch_size=32, shuffle=False)
 
     # Initialize the model
     input_size = len(feature_columns)
@@ -87,20 +79,37 @@ def train_model():
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    # Training loop
-    logging.info("Training the model...")
-    for epoch in range(10):  # Train for 10 epochs
-        model.train()
-        for batch_idx, (features, targets) in enumerate(train_loader):
-            optimizer.zero_grad()
-            outputs = model(features)
-            loss = criterion(outputs, targets)
-            loss.backward()
-            optimizer.step()
+    # Start MLFlow experiment
+    mlflow.set_experiment("Iris Classification")
+    with mlflow.start_run():
+        # Log hyperparameters
+        mlflow.log_param("input_size", input_size)
+        mlflow.log_param("hidden_size", hidden_size)
+        mlflow.log_param("num_classes", num_classes)
+        mlflow.log_param("learning_rate", 0.001)
+        mlflow.log_param("batch_size", 32)
+        mlflow.log_param("epochs", 10)
 
-        logging.info(f"Epoch {epoch + 1}, Loss: {loss.item()}")
+        # Training loop
+        logging.info("Training the model...")
+        for epoch in range(10):
+            model.train()
+            for features, targets in train_loader:
+                optimizer.zero_grad()
+                outputs = model(features)
+                loss = criterion(outputs, targets)
+                loss.backward()
+                optimizer.step()
 
-    # Save the model
+            # Log loss for the current epoch
+            logging.info(f"Epoch {epoch + 1}, Loss: {loss.item()}")
+            mlflow.log_metric("loss", loss.item(), step=epoch)
+
+        # Log the trained model to MLFlow
+        mlflow.pytorch.log_model(model, artifact_path="models")
+        logging.info("Model logged to MLFlow.")
+
+    # Save the model locally
     if not os.path.exists(MODEL_DIR):
         os.makedirs(MODEL_DIR)
     model_path = os.path.join(MODEL_DIR, "simple_nn.pth")

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/gurami.kiknadze/Desktop/EPAM%20HOMEWORK%20LAST1/ML_example/mlruns/227721682474209487/6a7b69018d07445fb0636b8cf63e2f8e/artifacts
+end_time: 1737575210642
+entry_point_name: ''
+experiment_id: '227721682474209487'
+lifecycle_stage: active
+run_id: 6a7b69018d07445fb0636b8cf63e2f8e
+run_name: worried-hound-58
+run_uuid: 6a7b69018d07445fb0636b8cf63e2f8e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1737575202630
+status: 3
+tags: []
+user_id: Gurami.Kiknadze

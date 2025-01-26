@@ -93,27 +93,76 @@ pytest tests/
 
 ## Docker Integration (Optional)
 
-### Training
-1. Build the Docker image:
+**Note:** Docker integration has not been implemented or tested for this project due to installation issues. However, the following steps outline how Docker support could be added for training and inference:
+
+#### Training
+1. Create a `Dockerfile` in the `training` directory with the following content:
+   ```dockerfile
+   # Use a base image with Python
+   FROM python:3.10-slim
+
+   # Set the working directory
+   WORKDIR /app
+
+   # Copy files into the container
+   COPY training/train.py .
+   COPY requirements.txt .
+   COPY settings.json .
+   COPY models/ ./models
+   COPY data/ ./data
+
+   # Install dependencies
+   RUN pip install --no-cache-dir -r requirements.txt
+
+   # Command to run the training script
+   CMD ["python", "train.py"]
+   ```
+
+2. Build the Docker image:
    ```bash
    docker build -f ./training/Dockerfile -t training_image .
    ```
 
-2. Run the training container:
+3. Run the training container:
    ```bash
    docker run training_image
    ```
 
-### Inference
-1. Build the Docker image:
+#### Inference
+1. Create a `Dockerfile` in the `inference` directory with the following content:
+   ```dockerfile
+   # Use a base image with Python
+   FROM python:3.10-slim
+
+   # Set the working directory
+   WORKDIR /app
+
+   # Copy files into the container
+   COPY inference/run.py .
+   COPY requirements.txt .
+   COPY settings.json .
+   COPY models/ ./models
+   COPY data/ ./data
+
+   # Install dependencies
+   RUN pip install --no-cache-dir -r requirements.txt
+
+   # Command to run the inference script
+   CMD ["python", "run.py"]
+   ```
+
+2. Build the Docker image:
    ```bash
    docker build -f ./inference/Dockerfile -t inference_image .
    ```
 
-2. Run the inference container:
+3. Run the inference container:
    ```bash
    docker run inference_image
    ```
+
+**Future Work:** Docker can be revisited and implemented once installation issues are resolved.
+
 
 ## Insights
 1. **Dataset**:
